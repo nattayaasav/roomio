@@ -1,0 +1,460 @@
+<template>
+  <div class="home-container">
+    <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
+      <div class="container">
+        <a class="navbar-brand d-flex align-items-center" href="#">
+          <img
+            src="https://scontent.fbkk35-1.fna.fbcdn.net/v/t39.30808-6/495154397_1657828194852162_1327971961573207698_n.jpg?stp=dst-jpg_tt6&cstp=mx1024x1024&ctp=p526x296&_nc_cat=108&cb=99be929b-878c9f95&ccb=1-7&_nc_sid=833d8c&_nc_ohc=jkxD-Q-HDL0Q7kNvwHBLEkr&_nc_oc=AdlZO7NMcvihuzRCCR1EgJCfEGgULaIGYL3FX5T1p3krThyRYcaBBNeMLOQ4vrEnZdTq_Oe3D0ZOUGlCnTtGIE5s&_nc_zt=23&_nc_ht=scontent.fbkk35-1.fna&_nc_gid=-qmoDtwbKZDzBIdcSCiUgw&oh=00_AfRikzESLuh455Qw92WeEYfZ91G3b-McYiwlNaFgIYDqog&oe=688AE719"
+            alt="Roomio"
+            width="40"
+            height="40"
+            class="me-2"
+          />
+          <span class="roomio-logo">Roomio</span>
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <ul class="navbar-nav ms-auto">
+            <li class="nav-item"><a class="nav-link text-muted" href="/">หน้าหลัก</a></li>
+            <li class="nav-item"><a class="nav-link text-coral fw-medium" href="/hotels">ห้องพัก</a></li>
+            <li class="nav-item"><a class="nav-link text-muted" href="/bookings">จองห้องพัก</a></li>
+            <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle text-muted" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">อื่นๆ</a>
+              <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="#">ติดต่อเรา</a></li>
+                <li><a class="dropdown-item" href="#">เกี่ยวกับเรา</a></li>
+              </ul>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <div class="container py-4" v-if="!selectedHotel">
+      <div class="row g-4">
+        <div class="col-md-4" v-for="(hotel, index) in hotels" :key="index">
+          <div class="card h-100 shadow-sm cursor-pointer" @click="selectHotel(index)">
+            <img :src="hotel.image" class="card-img-top" style="height: 220px; object-fit: cover" />
+            <div class="card-body">
+              <p class="text mb-1">{{ hotel.rating }} ดีมาก</p>
+              <h6 class="fw-bold">{{ hotel.name }}</h6>
+              <p class="fw-semibold mt-2">THB {{ hotel.price.toLocaleString() }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="container py-5" v-else>
+      <button class="btn btn-outline-secondary mb-4" @click="selectedHotel = null">← กลับ</button>
+
+      <div class="hotel-gallery">
+        <div class="main-image">
+          <img :src="selectedHotel.images[0]" class="img-fluid rounded" alt="Main hotel image" @click="openImageModal(selectedHotel.images[0])" />
+        </div>
+        <div class="sub-images">
+          <div 
+            v-for="(img, i) in selectedHotel.images.slice(1, 5)" 
+            :key="i" 
+            class="sub-image"
+            :class="{ 'last-image': i === 3 }"
+            @click="openImageModal(img)"
+          >
+            <img :src="img" class="img-fluid rounded" :alt="`Hotel image ${i + 2}`" />
+            <div v-if="i === 3 && selectedHotel.images.length > 5" class="image-overlay">
+              <span class="overlay-text">+{{ selectedHotel.images.length - 5 }} รูปอื่นๆ</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="d-flex justify-content-between align-items-start mt-4">
+          <div>
+              <h4 class="fw-bold mb-1">{{ selectedHotel.name }}</h4>
+              <p class="text-warning fw-medium mb-1">⭐ {{ selectedHotel.rating }} / 10 ดีมาก</p>
+          </div>
+          <div class="text-end">
+              <p class="hotel-price-detail mb-0">ราคาเริ่มต้นที่<br />
+                  <span class="fs-4 fw-bold">THB {{ selectedHotel.price.toLocaleString() }}</span>
+              </p>
+          </div>
+      </div>
+
+      <div class="row mt-4 align-items-start">
+        <div class="col-md-6 facilities-container">
+          <h6 class="fw-bold mb-3">สิ่งอำนวยความสะดวก</h6>
+          <div class="row g-3">
+            <div class="col-12 col-sm-6 col-lg-4" v-for="facility in facilities" :key="facility.text">
+              <div class="detail-icon">
+                <i :class="facility.icon"></i>
+                <span>{{ facility.text }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-6 nearby-container">
+          <h6 class="fw-bold mb-3">สถานที่ใกล้เคียง</h6>
+          <ul>
+            <li v-for="place in nearbyPlaces" :key="place">
+              <i class="bi bi-geo-alt-fill"></i>{{ place }}
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="row mt-4">
+        <div class="col-12 mb-4" v-for="(room, index) in rooms" :key="index">
+          <div class="room-card-new" :class="{ 'selected-room': selectedRoom && selectedRoom.name === room.name }">
+            <div class="row g-3 align-items-stretch">
+              <div class="col-lg-4">
+                <div class="room-image-frame">
+                  <img :src="room.image" :alt="room.name + ' Room'" class="img-fluid" />
+                </div>
+              </div>
+              <div class="col-lg-8">
+                <div class="room-details-frame">
+                  <div class="row h-100">
+                    <div class="col-md-8 d-flex flex-column justify-content-center">
+                      <h5 class="fw-bold text-coral mb-3">{{ room.name }}</h5>
+                      <div class="d-flex align-items-center gap-2 mb-2" v-if="room.beds">
+                        <i class="bi bi-bed fs-5 text-coral"></i>
+                        <span class="text-dark">{{ room.beds }}</span>
+                      </div>
+                      <div class="form-check mb-2">
+                        <input 
+                          class="form-check-input" 
+                          type="checkbox" 
+                          :id="'extraBed-' + index"
+                          v-model="room.extraBedSelected"
+                          @change="updateRoomPrice(index)"
+                        />
+                        <label class="form-check-label" :for="'extraBed-' + index">
+                          {{ room.extraBed }}
+                        </label>
+                      </div>
+                      <div v-if="room.singleBed" class="d-flex align-items-center gap-2 mb-2">
+                        <i class="bi bi-bed fs-6 text-muted"></i>
+                        <span class="text-muted">{{ room.singleBed }}</span>
+                      </div>
+                      <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-people fs-5 text-coral"></i>
+                        <span>{{ room.guests }}</span>
+                      </div>
+                    </div>
+                    <div class="col-md-4 text-end d-flex flex-column justify-content-center align-items-end">
+                      <div class="mb-3">
+                          <span class="hotel-price-detail">THB <span class="fs-4 fw-bold">{{ room.price.toLocaleString() }}</span></span>
+                      </div>
+                      <button class="btn btn-coral px-4 py-2 rounded-pill" @click="selectRoom(room)">เลือก</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row mt-5">
+        <div class="col-12">
+          <h4 class="fw-bold mb-4" style="color: #E57373;">ทัวร์ท่องเที่ยวแนะนำ</h4>
+          
+          <div class="row mb-4">
+            <div class="col-md-6 mb-3">
+              <div class="card border-0 shadow-sm">
+                <div class="position-relative">
+                  <img src="https://images.unsplash.com/photo-1544551763-46a013bb70d5?ixlib=rb-4.0.3&w=800" 
+                       class="card-img-top" style="height: 200px; object-fit: cover;" />
+                  <div class="position-absolute top-0 end-0 m-2">
+                    <input 
+                      class="form-check-input" 
+                      type="checkbox" 
+                      style="width: 20px; height: 20px;" 
+                      v-model="selectedTours"
+                      value="phi-phi"
+                      id="phi-phi"
+                    />
+                  </div>
+                </div>
+                <div class="card-body">
+                  <h6 class="fw-bold mb-2">ทัวร์เกาะไผ่, เกาะจีน และเกาะปีปอ</h6>
+                  <p class="text-muted small mb-2">THB 2,680</p>
+                  <p class="text-muted small mb-0">เพิ่มเติม ∨</p>
+                </div>
+              </div>
+            </div>
+            
+            <div class="col-md-6 mb-3">
+              <div class="card border-0 shadow-sm">
+                <div class="position-relative">
+                  <img src="https://images.unsplash.com/photo-1564349683136-77e08dba1ef7?ixlib=rb-4.0.3&w=800" 
+                       class="card-img-top" style="height: 200px; object-fit: cover;" />
+                  <div class="position-absolute top-0 end-0 m-2">
+                    <input 
+                      class="form-check-input" 
+                      type="checkbox" 
+                      style="width: 20px; height: 20px;" 
+                      v-model="selectedTours"
+                      value="zoo"
+                      id="zoo"
+                    />
+                  </div>
+                </div>
+                <div class="card-body">
+                  <h6 class="fw-bold mb-2">ทัวร์สวนสัตว์ปีปอเขาเขียว</h6>
+                  <p class="text-muted small mb-2">THB 1,250</p>
+                  <p class="text-muted small mb-0">เพิ่มเติม ∨</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="tours-section">
+            <h5 class="fw-bold mb-3">ทัวร์ท่องเที่ยว</h5>
+            
+            <div class="tour-item tour-item-bordered d-flex align-items-center mb-3 p-3">
+              <div class="form-check me-3">
+                <input class="form-check-input" type="checkbox" v-model="selectedTours" value="cruise" id="cruise">
+              </div>
+              <div class="flex-grow-1">
+                <h6 class="mb-1">ทัวร์สำราญท์ทะเลแบบสำราญ</h6>
+                <p class="text-muted small mb-0">เพิ่มเติม ∨</p>
+              </div>
+              <div class="text-end">
+                <span class="fw-bold">THB 1,670</span>
+              </div>
+            </div>
+
+            <div class="tour-item tour-item-bordered d-flex align-items-center mb-3 p-3">
+              <div class="form-check me-3">
+                <input class="form-check-input" type="checkbox" v-model="selectedTours" value="temple" id="temple">
+              </div>
+              <div class="flex-grow-1">
+                <h6 class="mb-1">ทัวร์เกาะชาม สัตบุน</h6>
+                <p class="text-muted small mb-0">เพิ่มเติม ∨</p>
+              </div>
+              <div class="text-end">
+                <span class="fw-bold">THB 750</span>
+              </div>
+            </div>
+
+            <div class="tour-item tour-item-bordered d-flex align-items-center mb-3 p-3">
+              <div class="form-check me-3">
+                <input class="form-check-input" type="checkbox" v-model="selectedTours" value="adventure" id="adventure">
+              </div>
+              <div class="flex-grow-1">
+                <h6 class="mb-1">ทัวร์อิสสราย-เมืองเก่า</h6>
+                <p class="text-muted small mb-0">เพิ่มเติม ∨</p>
+              </div>
+              <div class="text-end">
+                <span class="fw-bold">THB 990</span>
+              </div>
+            </div>
+
+            <div class="tour-item tour-item-bordered d-flex align-items-center mb-3 p-3">
+              <div class="form-check me-3">
+                <input class="form-check-input" type="checkbox" v-model="selectedTours" value="spa" id="spa">
+              </div>
+              <div class="flex-grow-1">
+                <h6 class="mb-1">ทัวร์เรือยอร์ชต์ชมพระอาทิตย์ตก</h6>
+                <p class="text-muted small mb-0">เพิ่มเติม ∨</p>
+              </div>
+              <div class="text-end">
+                <span class="fw-bold">THB 2,500</span>
+              </div>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center mt-4 p-3 bg-light rounded">
+              <div>
+                <span class="fw-bold fs-5">ราคารวม</span><br>
+                <span class="fs-4 fw-bold text-coral">THB {{ totalPrice.toLocaleString() }}</span>
+              </div>
+              <button class="btn btn-coral px-4 py-2 rounded-pill fw-bold" @click="proceedToBooking">จองเลย</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+    <div v-if="isModalVisible" class="image-modal-overlay" @click="closeImageModal">
+      <span class="close-modal-btn">&times;</span>
+      <img :src="modalImageSrc" class="modal-image" @click.stop />
+    </div>
+</template>
+
+<script setup>
+import { ref, computed } from 'vue'
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
+
+const isModalVisible = ref(false)
+const modalImageSrc = ref('')
+
+const hotels = ref([
+  {
+    name: 'อาณา อานันท์ รีสอร์ท แอนด์ วิลล่า',
+    rating: '8.8',
+    price: 2500,
+    image: 'https://pix8.agoda.net/hotelImages/7937563/0/3cda0fb72e97b50ec09a04c8ba403764.jpeg?ce=2&s=1024x',
+    images: [
+      'https://pix8.agoda.net/hotelImages/7937563/0/3cda0fb72e97b50ec09a04c8ba403764.jpeg?ce=2&s=1024x',
+      'https://pix8.agoda.net/hotelImages/7937563/-1/76cb6db5284245cd9bef1fdba1b5a7e5.jpg?ca=9&ce=1&s=1024x',
+      'https://q-xx.bstatic.com/xdata/images/hotel/max1024x768/197329980.jpg?k=77f414aeda7011631dbdcce26549722db9aee35d51cc9bd79342b806b30b423e&o=&s=1024x',
+      'https://q-xx.bstatic.com/xdata/images/hotel/max1024x768/395810551.jpg?k=fc9c3df404198d41bbf276be686f1714b4d379e94fdca3e0d7990afd885a2426&o=&s=1024x',
+      'https://pix8.agoda.net/hotelImages/793/7937563/7937563_19060916590075644869.jpg?ca=8&ce=1&s=1024x',
+      'https://images.unsplash.com/photo-1571896349842-33c89424de2d?ixlib=rb-4.0.3&w=800',
+      'https://images.unsplash.com/photo-1578645510447-e20b4311e3ce?ixlib=rb-4.0.3&w=800'
+    ]
+  },
+  {
+    name: 'ซีบรีซ จอมเทียน รีสอร์ท',
+    rating: '8.8',
+    price: 1011,
+    image: 'https://pix8.agoda.net/hotelImages/90441/-1/978a2c7bd460b76eea875f3ef8131776.jpg?ca=12&ce=1&s=1024x',
+    images: [
+      'https://cf.bstatic.com/xdata/images/hotel/270x200/217019267.jpg',
+      'https://cf.bstatic.com/xdata/images/hotel/270x200/217019268.jpg',
+      'https://cf.bstatic.com/xdata/images/hotel/270x200/217019269.jpg',
+      'https://cf.bstatic.com/xdata/images/hotel/270x200/217019270.jpg',
+      'https://cf.bstatic.com/xdata/images/hotel/270x200/217019271.jpg',
+      'https://images.unsplash.com/photo-1540541338287-41700207dee6?ixlib=rb-4.0.3&w=800'
+    ]
+  },
+  {
+    name: 'ควอเตอร์ 09 บีช',
+    rating: '8.6',
+    price: 623,
+    image: 'https://pix8.agoda.net/hotelImages/85086/-1/4609658eba0368326b9e05acb5536c76.jpg?ca=9&ce=1&s=1024x',
+    images: [
+      'https://cf.bstatic.com/xdata/images/hotel/270x200/469057070.jpg',
+      'https://cf.bstatic.com/xdata/images/hotel/270x200/469057071.jpg',
+      'https://cf.bstatic.com/xdata/images/hotel/270x200/469057072.jpg',
+      'https://cf.bstatic.com/xdata/images/hotel/270x200/469057073.jpg',
+      'https://cf.bstatic.com/xdata/images/hotel/270x200/469057074.jpg'
+    ]
+  }
+])
+
+const facilities = [
+  { icon: 'bi bi-wifi', text: 'Wi-Fi' },
+  { icon: 'bi bi-car-front', text: 'ที่จอดรถ' },
+  { icon: 'bi bi-water', text: 'สระว่ายน้ำ' },
+  { icon: 'bi bi-snow', text: 'เครื่องปรับอากาศ' },
+  { icon: 'bi bi-telephone', text: 'รูมเซอร์วิส' },
+  { icon: 'bi bi-egg-fried', text: 'อาหารเช้า' }
+]
+
+const nearbyPlaces = [
+  'แหล่งช็อปปิ้ง มีโชว์พัทยา',
+  'โอเชี่ยนมารีนา ยอชต์คลับ',
+  'วัดนาจอมเทียน',
+  'ตลาดน้ำ 4 ภาค พัทยา'
+]
+
+const rooms = ref([
+  {
+    name: 'Deluxe Twin',
+    beds: '1 เตียงคู่',
+    extraBed: 'เตียงเสริม 1 คน + 500 THB',
+    extraBedSelected: false,
+    guests: '2 คน',
+    price: 2690,
+    basePrice: 2690,
+    image: 'https://pix8.agoda.net/hotelImages/7937563/126928420/fa06a7c33b69d877e39416fa7c9c2567.jpg?ce=0&s=1024x'
+  },
+  {
+    name: 'Deluxe Family',
+    beds: '1 เตียงคู่',
+    extraBed: 'เตียงเสริม 1 คน + 500 THB',
+    extraBedSelected: false,
+    singleBed: '1 เตียงเดี่ยว',
+    guests: '3 คน',
+    price: 3370,
+    basePrice: 3370,
+    image: 'https://q-xx.bstatic.com/xdata/images/hotel/max1024x768/225106213.jpg?k=b60b34646280ba60ed44c6188e5ebcf345f9acbe15459da7412ccd6192587ab8&o=&s=1024x'
+  }
+])
+
+const updateRoomPrice = (index) => {
+  const room = rooms.value[index]
+  if (room.extraBedSelected) {
+    room.price = room.basePrice + 500
+  } else {
+    room.price = room.basePrice
+  }
+}
+
+const selectedHotel = ref(null)
+const selectedRoom = ref(null)
+const selectedTours = ref([])
+
+const tourPrices = {
+  'phi-phi': 2680,
+  'zoo': 1250,
+  cruise: 1670,
+  temple: 750,
+  adventure: 990,
+  spa: 2500
+}
+
+const totalPrice = computed(() => {
+  let total = 0
+  if (selectedRoom.value) {
+    total += selectedRoom.value.price
+  }
+  const tourTotal = selectedTours.value.reduce((sum, tour) => {
+    return sum + (tourPrices[tour] || 0)
+  }, 0)
+  total += tourTotal
+  return total
+})
+
+const selectHotel = (index) => {
+  selectedHotel.value = hotels.value[index]
+  selectedRoom.value = null
+  selectedTours.value = []
+  rooms.value.forEach(room => {
+    room.extraBedSelected = false
+    room.price = room.basePrice
+  })
+}
+
+const selectRoom = (room) => {
+  selectedRoom.value = room
+  console.log('Selected room:', room.name)
+}
+
+const proceedToBooking = () => {
+  if (!selectedRoom.value) {
+    alert('กรุณาเลือกห้องพักก่อนทำการจอง')
+    return
+  }
+  
+  const bookingData = {
+    hotel: selectedHotel.value,
+    room: selectedRoom.value,
+    tours: selectedTours.value,
+    tourPrices: tourPrices,
+    totalPrice: totalPrice.value
+  }
+  
+  router.push({
+    path: '/bookings',
+    query: { data: JSON.stringify(bookingData) }
+  })
+}
+
+const openImageModal = (imageUrl) => {
+  modalImageSrc.value = imageUrl
+  isModalVisible.value = true
+}
+
+const closeImageModal = () => {
+  isModalVisible.value = false
+  modalImageSrc.value = ''
+}
+</script>
