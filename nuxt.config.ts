@@ -6,7 +6,7 @@ export default defineNuxtConfig({
   // เพิ่มส่วนนี้เพื่อจัดการ API URL
   runtimeConfig: {
     public: {
-      apiBase: process.env.NUXT_PUBLIC_API_BASE || 'http://localhost:5000'
+      apiBase: process.env.NUXT_PUBLIC_API_BASE || 'https://roomio-backend.onrender.com'
     }
   }
 })
