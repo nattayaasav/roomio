@@ -49,7 +49,7 @@
             <div class="card-body">
               <p class="text-warning mb-1">⭐ {{ hotel.rating }} ดีมาก</p>
               <h6 class="fw-bold">{{ hotel.name }}</h6>
-              <p class="fw-semibold text-coral mt-2 mb-0">THB {{ hotel.price.toLocaleString() }}</p>
+              <p class="fw-semibold text-coral mt-2 mb-0">THB {{ (hotel.price || 0).toLocaleString() }}</p>
             </div>
           </div>
         </div>
@@ -68,7 +68,12 @@
 
       <div class="hotel-gallery">
         <div class="main-image">
-          <img :src="selectedHotel.images[0]" class="img-fluid rounded" alt="Main hotel image" @click="openImageModal(selectedHotel.images[0])" />
+          <img 
+            :src="selectedHotel.images[0]" 
+            class="img-fluid rounded" 
+            alt="Main hotel image" 
+            @click="openImageModal(selectedHotel.images[0])" 
+          />
         </div>
         <div class="sub-images">
           <div 
@@ -93,7 +98,7 @@
         </div>
         <div class="text-end">
           <p class="hotel-price-detail mb-0">ราคาเริ่มต้นที่<br />
-            <span class="fs-4 fw-bold text-coral">THB {{ selectedHotel.price.toLocaleString() }}</span>
+            <span class="fs-4 fw-bold text-coral">THB {{ (selectedHotel.price || 0).toLocaleString() }}</span>
           </p>
         </div>
       </div>
@@ -314,6 +319,7 @@ import { useRouter, useRoute } from 'vue-router'
 
 const router = useRouter()
 const route = useRoute()
+const config = useRuntimeConfig()
 
 const isModalVisible = ref(false)
 const modalImageSrc = ref('')
@@ -322,23 +328,41 @@ const searchQuery = computed(() => {
   return (route.query.q || route.query.search || route.query.keyword || route.query.location || '').toString()
 })
 
-const hotels = ref([
+// คลังรูปภาพสำรองคุณภาพสูง (สำรองเผื่อ DB ไม่มีรูป)
+const fallbackImagePool = [
+  [
+    'https://pix8.agoda.net/hotelImages/7937563/0/3cda0fb72e97b50ec09a04c8ba403764.jpeg?ce=2&s=1024x',
+    'https://pix8.agoda.net/hotelImages/7937563/-1/76cb6db5284245cd9bef1fdba1b5a7e5.jpg?ca=9&ce=1&s=1024x',
+    'https://q-xx.bstatic.com/xdata/images/hotel/max1024x768/197329980.jpg?k=77f414aeda7011631dbdcce26549722db9aee35d51cc9bd79342b806b30b423e&o=&s=1024x',
+    'https://q-xx.bstatic.com/xdata/images/hotel/max1024x768/395810551.jpg?k=fc9c3df404198d41bbf276be686f1714b4d379e94fdca3e0d7990afd885a2426&o=&s=1024x',
+    'https://images.unsplash.com/photo-1571896349842-33c89424de2d?ixlib=rb-4.0.3&w=800'
+  ],
+  [
+    'https://pix8.agoda.net/hotelImages/90441/-1/978a2c7bd460b76eea875f3ef8131776.jpg?ca=12&ce=1&s=1024x',
+    'https://cf.bstatic.com/xdata/images/hotel/270x200/217019267.jpg',
+    'https://cf.bstatic.com/xdata/images/hotel/270x200/217019268.jpg',
+    'https://cf.bstatic.com/xdata/images/hotel/270x200/217019269.jpg',
+    'https://images.unsplash.com/photo-1540541338287-41700207dee6?ixlib=rb-4.0.3&w=800'
+  ],
+  [
+    'https://pix8.agoda.net/hotelImages/85086/-1/4609658eba0368326b9e05acb5536c76.jpg?ca=9&ce=1&s=1024x',
+    'https://cf.bstatic.com/xdata/images/hotel/270x200/469057070.jpg',
+    'https://cf.bstatic.com/xdata/images/hotel/270x200/469057071.jpg',
+    'https://cf.bstatic.com/xdata/images/hotel/270x200/469057072.jpg',
+    'https://cf.bstatic.com/xdata/images/hotel/270x200/469057073.jpg'
+  ]
+]
+
+// Mock Data สำรองกรณีไม่ได้รัน Backend
+const defaultHotels = [
   {
     id: 1,
     name: 'อาณา อานันท์ รีสอร์ท แอนด์ วิลล่า',
-    location: 'พัทยา นาจอมเทียน ชลบุรี', // เพิ่มสถานที่เพื่อความแม่นยำในการค้นหา
+    location: 'พัทยา นาจอมเทียน ชลบุรี',
     rating: '8.8',
     price: 2500,
-    image: 'https://pix8.agoda.net/hotelImages/7937563/0/3cda0fb72e97b50ec09a04c8ba403764.jpeg?ce=2&s=1024x',
-    images: [
-      'https://pix8.agoda.net/hotelImages/7937563/0/3cda0fb72e97b50ec09a04c8ba403764.jpeg?ce=2&s=1024x',
-      'https://pix8.agoda.net/hotelImages/7937563/-1/76cb6db5284245cd9bef1fdba1b5a7e5.jpg?ca=9&ce=1&s=1024x',
-      'https://q-xx.bstatic.com/xdata/images/hotel/max1024x768/197329980.jpg?k=77f414aeda7011631dbdcce26549722db9aee35d51cc9bd79342b806b30b423e&o=&s=1024x',
-      'https://q-xx.bstatic.com/xdata/images/hotel/max1024x768/395810551.jpg?k=fc9c3df404198d41bbf276be686f1714b4d379e94fdca3e0d7990afd885a2426&o=&s=1024x',
-      'https://pix8.agoda.net/hotelImages/793/7937563/7937563_19060916590075644869.jpg?ca=8&ce=1&s=1024x',
-      'https://images.unsplash.com/photo-1571896349842-33c89424de2d?ixlib=rb-4.0.3&w=800',
-      'https://images.unsplash.com/photo-1578645510447-e20b4311e3ce?ixlib=rb-4.0.3&w=800'
-    ]
+    image: fallbackImagePool[0][0],
+    images: fallbackImagePool[0]
   },
   {
     id: 2,
@@ -346,15 +370,8 @@ const hotels = ref([
     location: 'พัทยา หาดจอมเทียน ชลบุรี',
     rating: '8.8',
     price: 1011,
-    image: 'https://pix8.agoda.net/hotelImages/90441/-1/978a2c7bd460b76eea875f3ef8131776.jpg?ca=12&ce=1&s=1024x',
-    images: [
-      'https://cf.bstatic.com/xdata/images/hotel/270x200/217019267.jpg',
-      'https://cf.bstatic.com/xdata/images/hotel/270x200/217019268.jpg',
-      'https://cf.bstatic.com/xdata/images/hotel/270x200/217019269.jpg',
-      'https://cf.bstatic.com/xdata/images/hotel/270x200/217019270.jpg',
-      'https://cf.bstatic.com/xdata/images/hotel/270x200/217019271.jpg',
-      'https://images.unsplash.com/photo-1540541338287-41700207dee6?ixlib=rb-4.0.3&w=800'
-    ]
+    image: fallbackImagePool[1][0],
+    images: fallbackImagePool[1]
   },
   {
     id: 3,
@@ -362,16 +379,59 @@ const hotels = ref([
     location: 'พัทยา ชลบุรี',
     rating: '8.6',
     price: 623,
-    image: 'https://pix8.agoda.net/hotelImages/85086/-1/4609658eba0368326b9e05acb5536c76.jpg?ca=9&ce=1&s=1024x',
-    images: [
-      'https://cf.bstatic.com/xdata/images/hotel/270x200/469057070.jpg',
-      'https://cf.bstatic.com/xdata/images/hotel/270x200/469057071.jpg',
-      'https://cf.bstatic.com/xdata/images/hotel/270x200/469057072.jpg',
-      'https://cf.bstatic.com/xdata/images/hotel/270x200/469057073.jpg',
-      'https://cf.bstatic.com/xdata/images/hotel/270x200/469057074.jpg'
-    ]
+    image: fallbackImagePool[2][0],
+    images: fallbackImagePool[2]
   }
-])
+]
+
+// ดึงข้อมูลจาก NestJS API
+const { data: hotelsApiData } = await useFetch(`${config.public.apiBase}/hotels`).catch(() => null)
+
+const hotels = computed(() => {
+  if (hotelsApiData.value && Array.isArray(hotelsApiData.value) && hotelsApiData.value.length > 0) {
+    return hotelsApiData.value.map((item, index) => {
+      const assignedFallback = fallbackImagePool[index % fallbackImagePool.length]
+
+      let validImages = []
+      
+      // ดึงรูปจริงจาก DB โดยเช็คจากฟิลด์ image_url ตรงๆ
+      if (item.hotel_images && Array.isArray(item.hotel_images)) {
+        validImages = item.hotel_images
+          .map(img => {
+            if (typeof img === 'string') return img
+            // เช็คชื่อฟิลด์ image_url ที่ตรงกับ MySQL
+            return img?.image_url || img?.url || img?.path || null
+          })
+          // กรองเอาเฉพาะ URL ที่ขึ้นต้นด้วย http และไม่ใช่ลิงก์หลอก example.com
+          .filter(url => url && typeof url === 'string' && url.trim().startsWith('http') && !url.includes('example.com'))
+      }
+
+      // ถ้าโรงแรมไหนใน DB ไม่มีรูป (เช่น ID 4, 11) หรือรูปไม่ครบ 5 ให้เติมรูปสำรองเข้าไปให้ครบ 5 รูป
+      if (validImages.length < 5) {
+        const extraNeeded = assignedFallback.slice(validImages.length)
+        validImages = [...validImages, ...extraNeeded]
+      }
+
+      let minPrice = 1200
+      if (item.rooms && Array.isArray(item.rooms)) {
+        const prices = item.rooms.map(r => r?.price || r?.price_per_night).filter(p => p > 0)
+        if (prices.length) minPrice = Math.min(...prices)
+      }
+
+      return {
+        id: item.hotel_id || item.id,
+        name: item.hotel_name || item.name,
+        location: item.country || 'พัทยา ชลบุรี',
+        rating: item.rating ? item.rating.toString() : '8.8',
+        price: minPrice,
+        image: validImages[0], // รูปหลักหน้าการ์ด
+        images: validImages,   // รูปทั้งหมด 5 รูปหน้ารายละเอียด
+        raw: item
+      }
+    })
+  }
+  return defaultHotels
+})
 
 const filteredHotels = computed(() => {
   const query = searchQuery.value.trim().toLowerCase()
