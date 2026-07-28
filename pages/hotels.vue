@@ -1,10 +1,10 @@
 <template>
   <div class="home-container">
-    <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
+    <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom shadow-sm">
       <div class="container">
-        <a class="navbar-brand d-flex align-items-center" href="#">
+        <a class="navbar-brand d-flex align-items-center" href="/">
           <img
-            src="https://scontent.fbkk35-1.fna.fbcdn.net/v/t39.30808-6/495154397_1657828194852162_1327971961573207698_n.jpg?stp=dst-jpg_tt6&cstp=mx1024x1024&ctp=p526x296&_nc_cat=108&cb=99be929b-878c9f95&ccb=1-7&_nc_sid=833d8c&_nc_ohc=jkxD-Q-HDL0Q7kNvwHBLEkr&_nc_oc=AdlZO7NMcvihuzRCCR1EgJCfEGgULaIGYL3FX5T1p3krThyRYcaBBNeMLOQ4vrEnZdTq_Oe3D0ZOUGlCnTtGIE5s&_nc_zt=23&_nc_ht=scontent.fbkk35-1.fna&_nc_gid=-qmoDtwbKZDzBIdcSCiUgw&oh=00_AfRikzESLuh455Qw92WeEYfZ91G3b-McYiwlNaFgIYDqog&oe=688AE719"
+            src="https://i.postimg.cc/VLDp5PGV/Screenshot-2026-07-29-005610.png"
             alt="Roomio"
             width="40"
             height="40"
@@ -32,23 +32,39 @@
       </div>
     </nav>
 
+    <!-- รายการโรงแรม -->
     <div class="container py-4" v-if="!selectedHotel">
-      <div class="row g-4">
-        <div class="col-md-4" v-for="(hotel, index) in hotels" :key="index">
-          <div class="card h-100 shadow-sm cursor-pointer" @click="selectHotel(index)">
+      <div v-if="searchQuery" class="d-flex align-items-center justify-content-between mb-4 bg-light p-3 rounded-3">
+        <div>
+          <span class="text-muted me-2">ผลการค้นหาสำหรับ:</span>
+          <strong class="text-coral fs-5">"{{ searchQuery }}"</strong>
+        </div>
+        <button class="btn btn-sm btn-outline-secondary" @click="clearSearch">ล้างการค้นหา</button>
+      </div>
+
+      <div class="row g-4" v-if="filteredHotels.length > 0">
+        <div class="col-md-4" v-for="hotel in filteredHotels" :key="hotel.id">
+          <div class="card h-100 shadow-sm cursor-pointer" @click="selectHotel(hotel)">
             <img :src="hotel.image" class="card-img-top" style="height: 220px; object-fit: cover" />
             <div class="card-body">
-              <p class="text mb-1">{{ hotel.rating }} ดีมาก</p>
+              <p class="text-warning mb-1">⭐ {{ hotel.rating }} ดีมาก</p>
               <h6 class="fw-bold">{{ hotel.name }}</h6>
-              <p class="fw-semibold mt-2">THB {{ hotel.price.toLocaleString() }}</p>
+              <p class="fw-semibold text-coral mt-2 mb-0">THB {{ hotel.price.toLocaleString() }}</p>
             </div>
           </div>
         </div>
       </div>
+
+      <div v-else class="text-center py-5">
+        <i class="bi bi-search fs-1 text-muted"></i>
+        <h5 class="mt-3 text-muted">ไม่พบที่พักที่ตรงกับคำค้นหา "{{ searchQuery }}"</h5>
+        <button class="btn btn-coral mt-2" @click="clearSearch">ดูที่พักทั้งหมด</button>
+      </div>
     </div>
 
+    <!-- รายละเอียดโรงแรมและห้องพัก -->
     <div class="container py-5" v-else>
-      <button class="btn btn-outline-secondary mb-4" @click="selectedHotel = null">← กลับ</button>
+      <button class="btn btn-outline-secondary mb-4" @click="selectedHotel = null">← กลับไปหน้ารายการ</button>
 
       <div class="hotel-gallery">
         <div class="main-image">
@@ -71,15 +87,15 @@
       </div>
 
       <div class="d-flex justify-content-between align-items-start mt-4">
-          <div>
-              <h4 class="fw-bold mb-1">{{ selectedHotel.name }}</h4>
-              <p class="text-warning fw-medium mb-1">⭐ {{ selectedHotel.rating }} / 10 ดีมาก</p>
-          </div>
-          <div class="text-end">
-              <p class="hotel-price-detail mb-0">ราคาเริ่มต้นที่<br />
-                  <span class="fs-4 fw-bold">THB {{ selectedHotel.price.toLocaleString() }}</span>
-              </p>
-          </div>
+        <div>
+          <h4 class="fw-bold mb-1">{{ selectedHotel.name }}</h4>
+          <p class="text-warning fw-medium mb-1">⭐ {{ selectedHotel.rating }} / 10 ดีมาก</p>
+        </div>
+        <div class="text-end">
+          <p class="hotel-price-detail mb-0">ราคาเริ่มต้นที่<br />
+            <span class="fs-4 fw-bold text-coral">THB {{ selectedHotel.price.toLocaleString() }}</span>
+          </p>
+        </div>
       </div>
 
       <div class="row mt-4 align-items-start">
@@ -99,7 +115,7 @@
           <h6 class="fw-bold mb-3">สถานที่ใกล้เคียง</h6>
           <ul>
             <li v-for="place in nearbyPlaces" :key="place">
-              <i class="bi bi-geo-alt-fill"></i>{{ place }}
+              <i class="bi bi-geo-alt-fill text-coral me-2"></i>{{ place }}
             </li>
           </ul>
         </div>
@@ -111,7 +127,7 @@
             <div class="row g-3 align-items-stretch">
               <div class="col-lg-4">
                 <div class="room-image-frame">
-                  <img :src="room.image" :alt="room.name + ' Room'" class="img-fluid" />
+                  <img :src="room.image" :alt="room.name + ' Room'" class="img-fluid rounded" />
                 </div>
               </div>
               <div class="col-lg-8">
@@ -146,9 +162,15 @@
                     </div>
                     <div class="col-md-4 text-end d-flex flex-column justify-content-center align-items-end">
                       <div class="mb-3">
-                          <span class="hotel-price-detail">THB <span class="fs-4 fw-bold">{{ room.price.toLocaleString() }}</span></span>
+                        <span class="hotel-price-detail">THB <span class="fs-4 fw-bold text-coral">{{ room.price.toLocaleString() }}</span></span>
                       </div>
-                      <button class="btn btn-coral px-4 py-2 rounded-pill" @click="selectRoom(room)">เลือก</button>
+                      <button 
+                        class="btn px-4 py-2 rounded-pill" 
+                        :class="selectedRoom && selectedRoom.name === room.name ? 'btn-success' : 'btn-coral'"
+                        @click="selectRoom(room)"
+                      >
+                        {{ selectedRoom && selectedRoom.name === room.name ? 'เลือกแล้ว' : 'เลือก' }}
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -160,7 +182,7 @@
 
       <div class="row mt-5">
         <div class="col-12">
-          <h4 class="fw-bold mb-4" style="color: #E57373;">ทัวร์ท่องเที่ยวแนะนำ</h4>
+          <h4 class="fw-bold mb-4 text-coral">ทัวร์ท่องเที่ยวแนะนำ</h4>
           
           <div class="row mb-4">
             <div class="col-md-6 mb-3">
@@ -267,7 +289,7 @@
               </div>
             </div>
 
-            <div class="d-flex justify-content-between align-items-center mt-4 p-3 bg-light rounded">
+            <div class="d-flex justify-content-between align-items-center mt-4 p-3 bg-light rounded shadow-sm">
               <div>
                 <span class="fw-bold fs-5">ราคารวม</span><br>
                 <span class="fs-4 fw-bold text-coral">THB {{ totalPrice.toLocaleString() }}</span>
@@ -279,24 +301,32 @@
       </div>
     </div>
   </div>
-    <div v-if="isModalVisible" class="image-modal-overlay" @click="closeImageModal">
-      <span class="close-modal-btn">&times;</span>
-      <img :src="modalImageSrc" class="modal-image" @click.stop />
-    </div>
+
+  <div v-if="isModalVisible" class="image-modal-overlay" @click="closeImageModal">
+    <span class="close-modal-btn">&times;</span>
+    <img :src="modalImageSrc" class="modal-image" @click.stop />
+  </div>
 </template>
 
 <script setup>
 import { ref, computed } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 
 const router = useRouter()
+const route = useRoute()
 
 const isModalVisible = ref(false)
 const modalImageSrc = ref('')
 
+const searchQuery = computed(() => {
+  return (route.query.q || route.query.search || route.query.keyword || route.query.location || '').toString()
+})
+
 const hotels = ref([
   {
+    id: 1,
     name: 'อาณา อานันท์ รีสอร์ท แอนด์ วิลล่า',
+    location: 'พัทยา นาจอมเทียน ชลบุรี', // เพิ่มสถานที่เพื่อความแม่นยำในการค้นหา
     rating: '8.8',
     price: 2500,
     image: 'https://pix8.agoda.net/hotelImages/7937563/0/3cda0fb72e97b50ec09a04c8ba403764.jpeg?ce=2&s=1024x',
@@ -311,7 +341,9 @@ const hotels = ref([
     ]
   },
   {
+    id: 2,
     name: 'ซีบรีซ จอมเทียน รีสอร์ท',
+    location: 'พัทยา หาดจอมเทียน ชลบุรี',
     rating: '8.8',
     price: 1011,
     image: 'https://pix8.agoda.net/hotelImages/90441/-1/978a2c7bd460b76eea875f3ef8131776.jpg?ca=12&ce=1&s=1024x',
@@ -325,7 +357,9 @@ const hotels = ref([
     ]
   },
   {
+    id: 3,
     name: 'ควอเตอร์ 09 บีช',
+    location: 'พัทยา ชลบุรี',
     rating: '8.6',
     price: 623,
     image: 'https://pix8.agoda.net/hotelImages/85086/-1/4609658eba0368326b9e05acb5536c76.jpg?ca=9&ce=1&s=1024x',
@@ -338,6 +372,21 @@ const hotels = ref([
     ]
   }
 ])
+
+const filteredHotels = computed(() => {
+  const query = searchQuery.value.trim().toLowerCase()
+  if (!query) return hotels.value
+
+  return hotels.value.filter(hotel => {
+    const matchName = hotel.name ? hotel.name.toLowerCase().includes(query) : false
+    const matchLocation = hotel.location ? hotel.location.toLowerCase().includes(query) : false
+    return matchName || matchLocation
+  })
+})
+
+const clearSearch = () => {
+  router.push('/hotels')
+}
 
 const facilities = [
   { icon: 'bi bi-wifi', text: 'Wi-Fi' },
@@ -413,8 +462,8 @@ const totalPrice = computed(() => {
   return total
 })
 
-const selectHotel = (index) => {
-  selectedHotel.value = hotels.value[index]
+const selectHotel = (hotel) => {
+  selectedHotel.value = hotel
   selectedRoom.value = null
   selectedTours.value = []
   rooms.value.forEach(room => {
@@ -425,7 +474,6 @@ const selectHotel = (index) => {
 
 const selectRoom = (room) => {
   selectedRoom.value = room
-  console.log('Selected room:', room.name)
 }
 
 const proceedToBooking = () => {

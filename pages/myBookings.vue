@@ -4,7 +4,7 @@
       <div class="container">
         <NuxtLink class="navbar-brand d-flex align-items-center" to="/">
           <img
-            src="https://scontent.fbkk35-1.fna.fbcdn.net/v/t39.30808-6/495154397_1657828194852162_1327971961573207698_n.jpg?stp=dst-jpg_tt6&cstp=mx1024x1024&ctp=p526x296&_nc_cat=108&cb=99be929b-878c9f95&ccb=1-7&_nc_sid=833d8c&_nc_ohc=jkxD-Q-HDL0Q7kNvwHBLEkr&_nc_oc=AdlZO7NMcvihuzRCCR1EgJCfEGgULaIGYL3FX5T1p3krThyRYcaBBNeMLOQ4vrEnZdTq_Oe3D0ZOUGlCnTtGIE5s&_nc_zt=23&_nc_ht=scontent.fbkk35-1.fna&_nc_gid=-qmoDtwbKZDzBIdcSCiUgw&oh=00_AfRikzESLuh455Qw92WeEYfZ91G3b-McYiwlNaFgIYDqog&oe=688AE719"
+            src="https://i.postimg.cc/VLDp5PGV/Screenshot-2026-07-29-005610.png"
             alt="Roomio"
             width="40"
             height="40"

@@ -2,9 +2,9 @@
   <div class="home-container">
     <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom fixed-top shadow-sm">
       <div class="container">
-        <a class="navbar-brand d-flex align-items-center" href="#">
+        <a class="navbar-brand d-flex align-items-center" href="/">
           <img
-            src="https://scontent.fbkk35-1.fna.fbcdn.net/v/t39.30808-6/495154397_1657828194852162_1327971961573207698_n.jpg?stp=dst-jpg_tt6&cstp=mx1024x1024&ctp=p526x296&_nc_cat=108&cb=99be929b-878c9f95&ccb=1-7&_nc_sid=833d8c&_nc_ohc=jkxD-Q-HDL0Q7kNvwHBLEkr&_nc_oc=AdlZO7NMcvihuzRCCR1EgJCfEGgULaIGYL3FX5T1p3krThyRYcaBBNeMLOQ4vrEnZdTq_Oe3D0ZOUGlCnTtGIE5s&_nc_zt=23&_nc_ht=scontent.fbkk35-1.fna&_nc_gid=-qmoDtwbKZDzBIdcSCiUgw&oh=00_AfRikzESLuh455Qw92WeEYfZ91G3b-McYiwlNaFgIYDqog&oe=688AE719"
+            src="https://i.postimg.cc/VLDp5PGV/Screenshot-2026-07-29-005610.png"
             alt="Roomio"
             width="40"
             height="40"
@@ -23,10 +23,10 @@
               <a class="nav-link text-coral fw-medium" href="/">หน้าหลัก</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link text-muted" href="hotels">ห้องพัก</a>
+              <a class="nav-link text-muted" href="/hotels">ห้องพัก</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link text-muted" href="#">จองห้องพัก</a>
+              <a class="nav-link text-muted" href="/bookings">จองห้องพัก</a>
             </li>
             <li class="nav-item dropdown">
               <a class="nav-link dropdown-toggle text-muted" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
@@ -55,7 +55,7 @@
 
             <div class="search-form-container bg-white rounded-4 shadow-lg p-4">
               <form @submit.prevent="handleSearch">
-                <div class="mb-4">
+                <div class="mb-4 position-relative search-autocomplete-container">
                   <label class="form-label text-start d-block fw-medium">
                     ค้นหาที่พัก
                   </label>
@@ -68,8 +68,29 @@
                       type="text"
                       class="form-control border-start-0 search-input" 
                       placeholder="ใส่ชื่อสถานที่หรือชื่อที่พัก"
+                      @focus="showSuggestions = true"
                       required
                     />
+                  </div>
+
+                  <div 
+                    v-if="showSuggestions && filteredSuggestions.length > 0" 
+                    class="autocomplete-dropdown position-absolute w-100 bg-white border rounded-3 shadow-lg mt-1 text-start overflow-hidden"
+                    style="z-index: 1050; max-height: 250px; overflow-y: auto;"
+                  >
+                    <div
+                      v-for="(item, index) in filteredSuggestions"
+                      :key="index"
+                      class="suggestion-item p-3 border-bottom d-flex align-items-center cursor-pointer hover-bg-light"
+                      @click="selectSuggestion(item.name)"
+                      style="cursor: pointer;"
+                    >
+                      <i class="bi bi-geo-alt-fill text-coral me-3 fs-5"></i>
+                      <div>
+                        <div class="fw-bold text-dark">{{ item.name }}</div>
+                        <small class="text-muted">{{ item.location }}</small>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
@@ -115,7 +136,6 @@
                         <i class="bi bi-chevron-down text-muted" :class="{ 'rotate-180': showDropdown }"></i>
                       </span>
                     </div>
-
 
                     <div v-if="showDropdown" class="dropdown-panel position-absolute w-100 mt-2 bg-white border rounded-3 shadow-lg p-3" style="z-index: 1000;">
                       <div class="d-flex justify-content-between align-items-center py-3 border-bottom">
@@ -193,9 +213,6 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { useRouter } from 'vue-router'
-
-const router = useRouter()
 
 const adults = ref(2)
 const children = ref(0)
@@ -205,6 +222,31 @@ const searchLocation = ref('')
 const checkinDate = ref('')
 const checkoutDate = ref('')
 const isSearching = ref(false)
+
+const showSuggestions = ref(false)
+
+const allLocations = ref([
+  { name: 'อาณา อานันท์ รีสอร์ท แอนด์ วิลล่า', location: 'นาจอมเทียน, พัทยา' },
+  { name: 'ซีบรีซ จอมเทียน รีสอร์ท', location: 'หาดจอมเทียน, พัทยา' },
+  { name: 'ควอเตอร์ 09 บีช', location: 'พัทยา' },
+  { name: 'พัทยา', location: 'ชลบุรี' },
+  { name: 'หาดจอมเทียน', location: 'พัทยา' }
+])
+
+const filteredSuggestions = computed(() => {
+  const query = searchLocation.value.trim().toLowerCase()
+  if (!query) return []
+  
+  return allLocations.value.filter(item => 
+    item.name.toLowerCase().includes(query) || 
+    item.location.toLowerCase().includes(query)
+  )
+})
+
+function selectSuggestion(name) {
+  searchLocation.value = name
+  showSuggestions.value = false
+}
 
 const today = computed(() => {
   return new Date().toISOString().split('T')[0]
@@ -275,7 +317,6 @@ function updateCheckoutMinDate() {
   }
 }
 
-
 async function handleSearch() {
   if (!searchLocation.value.trim()) {
     alert('กรุณาใส่ชื่อสถานที่หรือชื่อที่พัก')
@@ -288,25 +329,14 @@ async function handleSearch() {
   }
 
   isSearching.value = true
+  showSuggestions.value = false
 
-  try {า
-    await new Promise(resolve => setTimeout(resolve, 1500))
-    const searchParams = {
-      location: searchLocation.value,
-      checkin: checkinDate.value,
-      checkout: checkoutDate.value,
-      adults: adults.value,
-      children: children.value,
-      rooms: rooms.value,
-      nights: calculateNights()
-    }
-
-    console.log('ค้นหาที่พักด้วยข้อมูล:', searchParams)
-
-    await router.push({
+  try {
+    await navigateTo({
       path: '/hotels',
       query: {
-        q: searchLocation.value,
+        q: searchLocation.value.trim(),
+        search: searchLocation.value.trim(),
         checkin: checkinDate.value,
         checkout: checkoutDate.value,
         adults: adults.value.toString(),
@@ -314,7 +344,6 @@ async function handleSearch() {
         rooms: rooms.value.toString()
       }
     })
-
   } catch (error) {
     console.error('เกิดข้อผิดพลาดในการค้นหา:', error)
     alert('เกิดข้อผิดพลาดในการค้นหา กรุณาลองใหม่อีกครั้ง')
@@ -323,31 +352,25 @@ async function handleSearch() {
   }
 }
 
-function calculateNights() {
-  if (checkinDate.value && checkoutDate.value) {
-    const checkin = new Date(checkinDate.value)
-    const checkout = new Date(checkoutDate.value)
-    const diffTime = Math.abs(checkout - checkin)
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-    return diffDays
-  }
-  return 0
-}
-
 function handleClickOutside(event) {
-  const dropdown = document.querySelector('.guest-dropdown')
-  if (dropdown && !dropdown.contains(event.target)) {
+  const guestDropdown = document.querySelector('.guest-dropdown')
+  if (guestDropdown && !guestDropdown.contains(event.target)) {
     showDropdown.value = false
+  }
+
+  const searchContainer = document.querySelector('.search-autocomplete-container')
+  if (searchContainer && !searchContainer.contains(event.target)) {
+    showSuggestions.value = false
   }
 }
 
 onMounted(() => {
-  const today = new Date()
-  const tomorrow = new Date(today)
-  tomorrow.setDate(tomorrow.getDate() + 1)
+  const todayDate = new Date()
+  const tomorrowDate = new Date(todayDate)
+  tomorrowDate.setDate(tomorrowDate.getDate() + 1)
   
-  checkinDate.value = today.toISOString().split('T')[0]
-  checkoutDate.value = tomorrow.toISOString().split('T')[0]
+  checkinDate.value = todayDate.toISOString().split('T')[0]
+  checkoutDate.value = tomorrowDate.toISOString().split('T')[0]
   
   document.addEventListener('click', handleClickOutside)
 })
@@ -356,3 +379,9 @@ onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside)
 })
 </script>
+
+<style scoped>
+.suggestion-item:hover {
+  background-color: #f8f9fa;
+}
+</style>
