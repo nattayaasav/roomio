@@ -384,8 +384,15 @@ const defaultHotels = [
   }
 ]
 
-// ดึงข้อมูลจาก NestJS API
-const { data: hotelsApiData } = await useFetch(`${config.public.apiBase}/hotels`).catch(() => null)
+// โหลด API เฉพาะฝั่ง browser แบบไม่บล็อกการเปลี่ยนหน้า
+// Render backend อาจ cold start หรือใช้งานไม่ได้ชั่วคราว จึงกำหนด timeout
+// และให้ computed ด้านล่างแสดง defaultHotels ได้ทันทีระหว่างรอ/เมื่อ API ล้มเหลว
+const { data: hotelsApiData } = useFetch(`${config.public.apiBase}/hotels`, {
+  server: false,
+  lazy: true,
+  timeout: 10000,
+  default: () => []
+})
 
 const hotels = computed(() => {
   if (hotelsApiData.value && Array.isArray(hotelsApiData.value) && hotelsApiData.value.length > 0) {
